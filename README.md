@@ -10,10 +10,11 @@ Este es el repositorio del *Grupo 3*, cuyos integrantes son:
 | Nombre Completo         | RUT           | Rol                     |
 |-------------------------|---------------|--------------------------|
 | Héctor Muñoz            | 202373628-7   | Integrante               |
-| Vicente Jimenez         | 202373523-K   | Integrante               |
+| Vicente Gaete           | -----------   | Integrante               |
 | Andrés Vial             | 202373627-9   | Integrante               |
 | Simón Parra             | 202373560-4   | Integrante               |
-| **Camilo Araya**        | —             | Tutor                    |
+| Crishtobal kyarion      | -----------   | Integrante               |
+| **Alex Urrutia**        | —             | Tutor                    |
 | **Ricardo Salas**       | —             | Profesor de Paralelo     |
 
 
