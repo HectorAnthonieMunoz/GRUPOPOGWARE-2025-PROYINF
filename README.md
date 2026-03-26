@@ -13,7 +13,7 @@ Este es el repositorio del *Grupo 3*, cuyos integrantes son:
 | Vicente Gaete           | -----------   | Integrante               |
 | Andrés Vial             | 202373627-9   | Integrante               |
 | Simón Parra             | 202373560-4   | Integrante               |
-| Crishtobal kyarion      | -----------   | Integrante               |
+| Cristóbal Carrión      | -----------   | Integrante               |
 | **Alex Urrutia**        | —             | Tutor                    |
 | **Ricardo Salas**       | —             | Profesor de Paralelo     |
 
