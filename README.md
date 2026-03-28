@@ -1,4 +1,4 @@
-# Grupo 03 - Pogware🦎
+# Grupo 15 - Pogware🦎
 
 
 > **💡 Nota:** Para desplegar el proyecto, visitar la carpeta **`creditos-financieron-pern-docker-microservicios`** en este repositorio.
