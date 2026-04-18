@@ -32,7 +32,7 @@ services:
     env_file:
       - ./services/simulacion/.env
     ports:
-      - "3002:3002"
+      - "3002:4000"
     depends_on:
       - db_simulacion
 

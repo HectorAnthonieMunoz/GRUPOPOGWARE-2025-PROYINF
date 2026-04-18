@@ -3,6 +3,7 @@ const express = require("express");
 require("dotenv").config();
 const { pool, connectWithRetry } = require("./db");
 const simulacionRoutes = require("./routes/simulacionRoutes");
+const recommendationRoutes = require("./routes/recommendation.routes")
 
 const app = express();
 app.use(express.json());
@@ -20,11 +21,14 @@ app.get("/", (req, res) => {
 // Rutas de simulación
 app.use("/api", simulacionRoutes);
 
+// ruta de recomendacion
+app.use("/", recommendationRoutes);
+
 // Plantilla para agregar más rutas o middlewares
 // app.use('/otra', require('./routes/otraRoutes'));
 
 // Iniciar servidor con reintentos de conexión
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3002;
 
 async function startServer() {
   try {
