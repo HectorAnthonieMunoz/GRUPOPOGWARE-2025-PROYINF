@@ -21,6 +21,7 @@ export default function useSimulacion(user) {
   const [vistaPrevia, setVistaPrevia] = useState(null);
   const [mostrarAmortizacion, setMostrarAmortizacion] = useState(false);
 
+  // 1. Mantenemos la vista previa local (matemática rápida)
   const calcularVistaPrevia = useCallback((montoInput, plazoInput) => {
     const m = Number(montoInput);
     const p = Number(plazoInput);
@@ -40,6 +41,7 @@ export default function useSimulacion(user) {
     const montoTot = Math.round(cuota * p);
     const intereses = Math.round(montoTot - m);
     const cae = parseFloat((CONFIG.TASA_BASE_ANUAL + ((gastosOp + comisionAp) / m)).toFixed(6));
+    
     setVistaPrevia({
       monto: m,
       plazo: p,
@@ -79,16 +81,21 @@ export default function useSimulacion(user) {
     }
   }, [user, navigate, cargarHistorial]);
 
+  // 2. Modificamos handleSimular para que el objeto data pase directo al backend
   const handleSimular = useCallback(async (data) => {
     setError(null);
     setSuccess(null);
-    setSimulacion(null);
+    // No limpiamos setSimulacion de inmediato para que no parpadee la pantalla
     setLoading(true);
 
     try {
+      // 'data' ahora trae: monto, plazo, ingresos_mensuales, deudas_actuales
       const response = await crearSimulacion(data, user.token);
+      
+      // La respuesta del backend ahora incluye 'analisisPersonalizado' (HU 1)
       setSimulacion(response.data);
-      setSuccess("✅ Simulación guardada exitosamente en tu historial");
+      
+      setSuccess("✅ Simulación personalizada guardada exitosamente");
       cargarHistorial(mostrarTodoHistorial ? null : 4);
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
@@ -116,7 +123,6 @@ export default function useSimulacion(user) {
       setSuccess("Simulación eliminada correctamente");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error("Error al eliminar:", err);
       setError("Error al eliminar la simulación");
     }
   }, [user?.token, cargarHistorial, mostrarTodoHistorial]);
@@ -143,14 +149,14 @@ export default function useSimulacion(user) {
     setMonto,
     plazo,
     setPlazo,
-    simulacion,
+    simulacion, // Este contiene el resultado real + probabilidad (HU 1)
     loading,
     error,
     success,
     historial,
     mostrarTodoHistorial,
     loadingHistorial,
-    vistaPrevia,
+    vistaPrevia, // Este es el cálculo instantáneo local
     mostrarAmortizacion,
     setMostrarAmortizacion,
     calcularVistaPrevia,

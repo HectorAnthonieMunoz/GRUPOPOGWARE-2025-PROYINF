@@ -16,7 +16,35 @@ export default function SimulacionPreview({
 
       {vistaPrevia ? (
         <>
-          {/* Simulación preliminar: no mostrar estado/etiqueta en componentes de simulación */}
+          {/* --- BLOQUE HU 1: ESTIMACIÓN DE APROBACIÓN --- */}
+          {vistaPrevia.analisisPersonalizado && (
+            <div style={{
+              padding: '16px',
+              borderRadius: '10px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              // Colores dinámicos según el nivel
+              background: vistaPrevia.analisisPersonalizado.probabilidad > 60 ? '#f0fdf4' : vistaPrevia.analisisPersonalizado.probabilidad > 30 ? '#fffbeb' : '#fef2f2',
+              border: `2px solid ${vistaPrevia.analisisPersonalizado.probabilidad > 60 ? '#16a34a' : vistaPrevia.analisisPersonalizado.probabilidad > 30 ? '#d97706' : '#dc2626'}`,
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>
+                PROBABILIDAD DE APROBACIÓN
+              </div>
+              <div style={{ 
+                fontSize: '32px', 
+                fontWeight: '900', 
+                color: vistaPrevia.analisisPersonalizado.probabilidad > 60 ? '#15803d' : vistaPrevia.analisisPersonalizado.probabilidad > 30 ? '#b45309' : '#b91c1c' 
+              }}>
+                {vistaPrevia.analisisPersonalizado.probabilidad}%
+              </div>
+              <div style={{ fontWeight: 'bold', color: '#374151' }}>
+                Nivel: {vistaPrevia.analisisPersonalizado.nivel}
+              </div>
+              <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                Carga financiera estimada: {vistaPrevia.analisisPersonalizado.cargaEstimada}%
+              </div>
+            </div>
+          )}
 
           <div style={styles.cuotaBox}>
             <div style={styles.cuotaLabel}>Tu cuota mensual será:</div>
@@ -68,7 +96,7 @@ export default function SimulacionPreview({
           <div style={styles.warningBox}>
             <strong>💡 ¿Qué es el CAE?</strong>
             <p style={{ margin: "8px 0 0 0", fontSize: "13px" }}>
-              La Carga Anual Equivalente incluye todos los costos del crédito (tasa base + gastos + comisiones)
+              La Carga Anual Equivalente incluye todos los costos del crédito (tasa base + gastos + comisiones).
             </p>
           </div>
 
@@ -80,6 +108,7 @@ export default function SimulacionPreview({
 
           {mostrarAmortizacion && (
             <div style={{ marginTop: 16 }}>
+              {/* Se mantiene el uso del componente AmortizacionTable original */}
               <AmortizacionTable tabla={generarTablaAmortizacion(vistaPrevia)} styles={styles} />
             </div>
           )}

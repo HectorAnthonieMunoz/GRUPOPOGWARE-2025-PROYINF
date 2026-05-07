@@ -5,6 +5,12 @@ export default function SimulacionForm({
   setMonto,
   plazo,
   setPlazo,
+  // Nuevos props agregados para la HU 1 (Datos Financieros)
+  ingresos,
+  setIngresos,
+  deudas,
+  setDeudas,
+  // Props originales
   handleSimular,
   loading,
   handleLimpiar,
@@ -32,6 +38,7 @@ export default function SimulacionForm({
       </div>
 
       <form onSubmit={handleSimular}>
+        {/* --- SECCIÓN ORIGINAL: DATOS DEL CRÉDITO --- */}
         <div style={styles.formGroup}>
           <label style={styles.label}>Monto del Crédito</label>
           <input
@@ -84,6 +91,38 @@ export default function SimulacionForm({
           </div>
         </div>
 
+        {/* --- SECCIÓN NUEVA HU 1: DATOS FINANCIEROS PERSONALES --- */}
+        <div style={{ ...styles.formGroup, borderTop: '1px solid #ddd', paddingTop: '20px', marginTop: '10px' }}>
+          <h3 style={{ fontSize: '1.1em', marginBottom: '8px', color: '#2c3e50', fontWeight: 'bold' }}>
+            Personalización (Probabilidad de Aprobación)
+          </h3>
+          <p style={{ fontSize: '0.85em', color: '#666', marginBottom: '15px' }}>
+            Ingresa tus datos para evaluar tus opciones reales frente al banco.
+          </p>
+
+          <label style={styles.label}>Ingresos Mensuales Líquidos ($)</label>
+          <input
+            type="number"
+            value={ingresos}
+            onChange={(e) => setIngresos(Number(e.target.value) || 0)}
+            style={{ ...styles.input, marginBottom: '15px' }}
+            min="100000"
+            placeholder="Ej: 800000"
+            required
+          />
+
+          <label style={styles.label}>Otras Deudas Mensuales ($) - Opcional</label>
+          <input
+            type="number"
+            value={deudas}
+            onChange={(e) => setDeudas(Number(e.target.value) || 0)}
+            style={styles.input}
+            min="0"
+            placeholder="Ej: 50000"
+          />
+        </div>
+
+        {/* --- BOTONES --- */}
         <div style={styles.buttonGroup}>
           <button
             type="submit"
@@ -94,7 +133,7 @@ export default function SimulacionForm({
               ...(loading ? styles.buttonDisabled : {}),
             }}
           >
-            {loading ? "Guardando..." : "Guardar Simulación"}
+            {loading ? "Evaluando..." : "Simular y Evaluar"}
           </button>
           <button type="button" onClick={handleLimpiar} style={{ ...styles.button, ...styles.buttonSecondary }}>
             Limpiar

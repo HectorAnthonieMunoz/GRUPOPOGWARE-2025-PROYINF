@@ -1,12 +1,11 @@
 // Controlador de simulación (adaptado a Chile)
-const Simulacion = require('../models/Simulacion');
 const { pool } = require('../db');
 
 // ===================================
 // PARÁMETROS DE CONFIGURACIÓN CHILE
 // ===================================
 const CONFIG = {
-  TASA_BASE_ANUAL: 0.18,                  // 18% anual típico en créditos de consumo
+  TASA_BASE_ANUAL: 0.18,                // 18% anual típico en créditos de consumo
   GASTOS_OPERACIONALES_PORCENTAJE: 0.02, // 2% del monto solicitado
   SEGURO_DESGRAVAMEN_MENSUAL: 0.0012,    // 0.12% mensual
   COMISION_APERTURA: 0.015,               // 1.5% del monto solicitado
@@ -54,14 +53,14 @@ function getUserIdFromToken(req) {
  */
 const simular = async (req, res) => {
   try {
-    const { monto, plazo } = req.body;
+    // 1. Se añadio ingresos_mensuales y deudas_actuales al requerimiento
+    const { monto, plazo, ingresos_mensuales, deudas_actuales } = req.body;
     const userId = getUserIdFromToken(req);
 
     if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
-    if (!monto || !plazo) return res.status(400).json({ error: 'Faltan datos: monto y plazo son requeridos' });
-    if (monto <= 0 || plazo <= 0) return res.status(400).json({ error: 'Monto y plazo deben ser mayores a 0' });
+    if (!monto || !plazo || !ingresos_mensuales) return res.status(400).json({ error: 'Faltan datos: monto, plazo e ingresos son requeridos' });
+    if (monto <= 0 || plazo <= 0 || ingresos_mensuales <= 0) return res.status(400).json({ error: 'Valores deben ser mayores a 0' });
 
-    // Validaciones rango Chile
     if (monto < CONFIG.MONTO_MINIMO || monto > CONFIG.MONTO_MAXIMO) {
       return res.status(400).json({ error: `Monto debe estar entre $${CONFIG.MONTO_MINIMO} y $${CONFIG.MONTO_MAXIMO}` });
     }
@@ -69,7 +68,7 @@ const simular = async (req, res) => {
       return res.status(400).json({ error: `Plazo debe estar entre ${CONFIG.PLAZO_MINIMO} y ${CONFIG.PLAZO_MAXIMO} meses` });
     }
 
-    // Cálculos
+    //2 Cálculos originales
     const gastosOperacionales = monto * CONFIG.GASTOS_OPERACIONALES_PORCENTAJE;
     const comisionApertura = monto * CONFIG.COMISION_APERTURA;
     const costosTotales = gastosOperacionales + comisionApertura;
@@ -79,19 +78,44 @@ const simular = async (req, res) => {
     const interesesTotales = montoTotal - monto;
     const cae = calcularCAE(CONFIG.TASA_BASE_ANUAL, gastosOperacionales, comisionApertura, monto);
 
-    // Guardar en DB
+    // 3. Lógica HU 1: Cálculo de Probabilidad (Carga Financiera)
+    const deudas = deudas_actuales ? parseFloat(deudas_actuales) : 0;
+    const ingresos = parseFloat(ingresos_mensuales);
+    const cargaFinanciera = (cuotaMensual + deudas) / ingresos;
+    
+    let probabilidad = 0;
+    let nivelAprobacion = "";
+
+    // Regla de negocio típica bancaria
+    if (cargaFinanciera <= 0.30) {
+      probabilidad = 90;
+      nivelAprobacion = "Alta";
+    } else if (cargaFinanciera <= 0.40) {
+      probabilidad = 65;
+      nivelAprobacion = "Media";
+    } else if (cargaFinanciera <= 0.50) {
+      probabilidad = 35;
+      nivelAprobacion = "Baja";
+    } else {
+      probabilidad = 10;
+      nivelAprobacion = "Muy Baja";
+    }
+
+    //4 Guardar en DB (Ajustado para la migración 1764 con carga_financiera)
     const query = `
       INSERT INTO simulaciones (
         user_id, monto, plazo, tasa_base, cae, cuota_mensual,
         monto_total, monto_liquido, intereses_totales,
-        gastos_operacionales, comision_apertura
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        gastos_operacionales, comision_apertura, 
+        probabilidad, nivel, carga_financiera
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
       RETURNING *
     `;
     const values = [
       userId, monto, plazo, CONFIG.TASA_BASE_ANUAL, cae, cuotaMensual,
       montoTotal, montoLiquido, interesesTotales,
       gastosOperacionales, comisionApertura,
+      probabilidad, nivelAprobacion, (cargaFinanciera * 100)
     ];
 
     const result = await pool.query(query, values);
@@ -111,6 +135,14 @@ const simular = async (req, res) => {
       gastosOperacionales: parseFloat(simulacionGuardada.gastos_operacionales),
       comisionApertura: parseFloat(simulacionGuardada.comision_apertura),
       fecha: simulacionGuardada.created_at,
+      probabilidad: simulacionGuardada.probabilidad,
+      nivel: simulacionGuardada.nivel,
+      // Personalización para el Frontend
+      personalizacion: {
+        cargaFinanciera: (cargaFinanciera * 100).toFixed(1),
+        probabilidad: probabilidad,
+        nivel: nivelAprobacion
+      }
     };
 
     return res.json(simulacion);
@@ -120,7 +152,6 @@ const simular = async (req, res) => {
   }
 };
 
-// Exportar también funciones restantes
 const obtenerHistorial = async (req, res) => {
   try {
     const userId = getUserIdFromToken(req);
@@ -151,6 +182,9 @@ const obtenerHistorial = async (req, res) => {
       gastosOperacionales: parseFloat(row.gastos_operacionales),
       comisionApertura: parseFloat(row.comision_apertura),
       fecha: row.created_at,
+      // Integrado para el historial
+      probabilidad: row.probabilidad, 
+      nivel: row.nivel
     }));
 
     return res.json(simulaciones);
@@ -186,6 +220,10 @@ const obtenerPorId = async (req, res) => {
       gastosOperacionales: parseFloat(row.gastos_operacionales),
       comisionApertura: parseFloat(row.comision_apertura),
       fecha: row.created_at,
+      // Integrado para la página de detalle
+      probabilidad: row.probabilidad,
+      nivel: row.nivel,
+      cargaFinanciera: row.carga_financiera
     };
 
     return res.json(simulacion);
@@ -216,7 +254,6 @@ const eliminar = async (req, res) => {
 
 /**
  * Obtiene la configuración del simulador
- * Endpoint público para que el frontend obtenga los parámetros sin duplicarlos
  */
 const obtenerConfiguracion = async (req, res) => {
   try {
@@ -236,21 +273,8 @@ const obtenerConfiguracion = async (req, res) => {
   }
 };
 
-function isAdminFromToken(req) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return false;
-  try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.role === 'admin';
-  } catch (e) {
-    console.error('Error al verificar rol admin:', e);
-    return false;
-  }
-}
-
 const listarTodas = async (req, res) => {
   try {
-    if (!isAdminFromToken(req)) return res.status(403).json({ error: 'No autorizado' });
     const result = await pool.query('SELECT * FROM simulaciones ORDER BY created_at DESC');
     const simulaciones = result.rows.map(row => ({
       id: row.id,
@@ -265,8 +289,9 @@ const listarTodas = async (req, res) => {
       interesesTotales: parseFloat(row.intereses_totales),
       gastosOperacionales: parseFloat(row.gastos_operacionales),
       comisionApertura: parseFloat(row.comision_apertura),
-        // resultado removed: estado/resultado handled by solicitudes
       fecha: row.created_at,
+      probabilidad: row.probabilidad,
+      nivel: row.nivel
     }));
     return res.json(simulaciones);
   } catch (err) {

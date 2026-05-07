@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../auth/authContext";
 import SimulacionForm from "../components/SimulacionForm";
@@ -11,6 +11,10 @@ import useSimulacion from "../hooks/useSimulacion";
 export default function SimulacionPage() {
   const { user } = React.useContext(AuthContext);
   const navigate = useNavigate();
+
+  // ESTADOS NUEVOS PARA LA HU 1
+  const [ingresos, setIngresos] = useState("");
+  const [deudas, setDeudas] = useState("0");
 
   const {
     monto,
@@ -64,12 +68,27 @@ export default function SimulacionPage() {
           setMonto={setMonto}
           plazo={plazo}
           setPlazo={setPlazo}
+          // Props de la HU 1
+          ingresos={ingresos}
+          setIngresos={setIngresos}
+          deudas={deudas}
+          setDeudas={setDeudas}
           handleSimular={(e) => {
             e.preventDefault();
-            handleSimular({ monto: Number(monto), plazo: Number(plazo) });
+            // Le pasamos al hook los datos originales + los financieros
+            handleSimular({ 
+              monto: Number(monto), 
+              plazo: Number(plazo),
+              ingresos_mensuales: Number(ingresos),
+              deudas_actuales: Number(deudas)
+            });
           }}
           loading={loading}
-          handleLimpiar={handleLimpiar}
+          handleLimpiar={() => {
+            setIngresos("");
+            setDeudas("0");
+            handleLimpiar();
+          }}
           CONFIG={CONFIG}
           styles={styles}
           formatCurrency={formatCurrency}
@@ -85,7 +104,7 @@ export default function SimulacionPage() {
         />
 
         <SimulacionPreview
-          vistaPrevia={vistaPrevia}
+          vistaPrevia={simulacion || vistaPrevia}
           mostrarAmortizacion={mostrarAmortizacion}
           setMostrarAmortizacion={setMostrarAmortizacion}
           generarTablaAmortizacion={generarTablaAmortizacion}
@@ -94,8 +113,6 @@ export default function SimulacionPage() {
           styles={styles}
         />
       </div>
-
-      {/* Se removió el bloque de tarjeta de "Simulación guardada" para dejar el foco en el formulario y el banner de revisita */}
 
       <div style={styles.card}>
         <h2 style={styles.cardTitle}>📚 Historial de Simulaciones</h2>

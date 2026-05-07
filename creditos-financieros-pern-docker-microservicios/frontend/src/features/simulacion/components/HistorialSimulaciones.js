@@ -42,6 +42,24 @@ export default function HistorialSimulaciones({
         {historial.map((sim) => (
           <div key={sim.id} style={styles.historialCard} onClick={() => handleSeleccionarSimulacion && handleSeleccionarSimulacion(sim)}>
             <div style={styles.historialHeader}>
+              
+              {/* --- NUEVA ETIQUETA DE PROBABILIDAD (HU 1) --- */}
+              {sim.probabilidad !== undefined && sim.probabilidad !== null && (
+                <div style={{
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  // Colores dinámicos basados en la probabilidad guardada
+                  backgroundColor: sim.probabilidad > 60 ? '#dcfce7' : sim.probabilidad > 30 ? '#fffbeb' : '#fef2f2',
+                  color: sim.probabilidad > 60 ? '#166534' : sim.probabilidad > 30 ? '#92400e' : '#991b1b',
+                  border: `1px solid ${sim.probabilidad > 60 ? '#16a34a' : sim.probabilidad > 30 ? '#d97706' : '#dc2626'}`
+                }}>
+                  {sim.probabilidad}% Aprobación
+                </div>
+              )}
+
               <div style={{ flex: 1 }} />
               <button
                 onClick={(e) => {
@@ -54,6 +72,7 @@ export default function HistorialSimulaciones({
                 🗑️
               </button>
             </div>
+
             {!modoLocal && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
                 <button
@@ -87,6 +106,13 @@ export default function HistorialSimulaciones({
                 <span>CAE:</span>
                 <strong>{formatPercent(sim.cae)}</strong>
               </div>
+              {/* Nivel de aprobación en texto pequeño si existe */}
+              {sim.nivel && (
+                <div style={{ ...styles.historialDetailRow, marginTop: '4px', borderTop: '1px dashed #eee', paddingTop: '4px' }}>
+                  <span>Nivel:</span>
+                  <strong style={{ color: sim.probabilidad > 60 ? '#16a34a' : '#4a5568' }}>{sim.nivel}</strong>
+                </div>
+              )}
             </div>
 
             <div style={styles.historialFooter}>{formatDate(sim.fecha)}</div>

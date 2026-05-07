@@ -122,6 +122,30 @@ export default function SimulacionDetalle() {
             <div style={{ fontSize: 12, color: "#6c757d", marginTop: 6 }}>por {sim.plazo} meses</div>
           </div>
 
+          {/* --- BLOQUE HU 1: PROBABILIDAD DE APROBACIÓN --- */}
+          {sim.probabilidad !== undefined && sim.probabilidad !== null && (
+            <div style={{
+              backgroundColor: sim.probabilidad > 60 ? '#f0fdf4' : sim.probabilidad > 30 ? '#fffbeb' : '#fef2f2',
+              border: `2px solid ${sim.probabilidad > 60 ? '#16a34a' : sim.probabilidad > 30 ? '#d97706' : '#dc2626'}`,
+              padding: '20px',
+              borderRadius: '12px',
+              textAlign: 'center',
+              marginBottom: '20px'
+            }}>
+              <div style={{ fontSize: '12px', color: '#666', fontWeight: 'bold', letterSpacing: '1px' }}>
+                ESTIMACIÓN DE APROBACIÓN
+              </div>
+              <div style={{ 
+                fontSize: '40px', 
+                fontWeight: '900', 
+                color: sim.probabilidad > 60 ? '#15803d' : sim.probabilidad > 30 ? '#b45309' : '#b91c1c' 
+              }}>
+                {sim.probabilidad}%
+              </div>
+              <div style={{ fontWeight: 'bold', color: '#374151' }}>Nivel: {sim.nivel}</div>
+            </div>
+          )}
+
           <div style={{ display: "grid", gap: 8 }}>
             <Row label="Monto solicitado" value={formatCurrency(sim.monto)} />
             <Row label="Monto líquido" value={formatCurrency(sim.montoLiquido)} strong color="#28a745" />
